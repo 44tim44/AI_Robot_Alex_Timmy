@@ -1,11 +1,17 @@
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.util.JsonParserSequence;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+
+import java.io.*;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,6 +46,16 @@ public class TestRobot3 {
      */
     public static void main(String[] args) throws Exception
     {
+        double angle;
+        double [] position;
+
+
+        byte[] jsonData = Files.readAllBytes(Paths.get("D:/MRDS4/Java_project/out/production/Java_project/Path-around-bench-and-sofa.json"));
+        ObjectMapper newMapper = new ObjectMapper();
+        Map<String, Object> data = newMapper.readValue(jsonData, Map.class);
+
+
+
         System.out.println("Creating Robot");
         TestRobot robot = new TestRobot("http://127.0.0.1", 50000);
 
@@ -68,10 +84,10 @@ public class TestRobot3 {
             // ask the robot about its position and angle
             robot.getResponse(lr);
 
-            double angle = robot.getHeadingAngle(lr);
+            angle = robot.getHeadingAngle(lr);
             System.out.println("heading = " + angle);
 
-            double [] position = robot.getPosition(lr);
+            position = robot.getPosition(lr);
             System.out.println("position = " + position[0] + ", " + position[1]);
         }
 
