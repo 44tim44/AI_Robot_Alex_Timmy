@@ -1,39 +1,32 @@
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.core.util.JsonParserSequence;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-
 import java.io.*;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 /**
  * Created by Timeout on 2017-09-04.
  */
-public class TestRobot3 {
+public class TestRobot4 {
 
     private String host;                // host and port numbers
     private int port;
     private ObjectMapper mapper;        // maps between JSON and Java structures
-    private TestRobot3 robot;
+    private TestRobot4 robot;
 
     /**
      * Create a robot connected to host "host" at port "port"
      * @param host normally http://127.0.0.1
      * @param port normally 50000
      */
-    public TestRobot3(String host, int port)
+    public TestRobot4(String host, int port)
     {
         this.host = host;
         this.port = port;
@@ -52,13 +45,20 @@ public class TestRobot3 {
     {
         double angle;
         double [] position;
+        Position roboPos;
 
-        JsonParser parser = new JsonParser();
-        Object obj = parser.parse(new FileReader("D:/MRDS4/Java_project/out/production/Java_project/Path-around-bench-and-sofa.json"));
-        JsonArray jsonArray = (JsonArray) obj;
+        File pathFile = new File("D:/MRDS4/Java_project/out/production/Java_project/Path-around-bench-and-sofa.json");
+        BufferedReader in = new BufferedReader(new InputStreamReader(
+                new FileInputStream(pathFile)));
+        ObjectMapper mapper2 = new ObjectMapper();
+        // read the path from the file
+        Collection<Map<String, Object>> data =
+                (Collection<Map<String, Object>>) mapper2.readValue(in, Collection.class);
+        int nPoints = data.size();
+        Position [] path = new Position[nPoints];
 
         System.out.println("Creating Robot");
-        TestRobot robot = new TestRobot("http://127.0.0.1", 50000);
+        TestRobot4 robot = new TestRobot4("http://127.0.0.1", 50000);
 
         System.out.println("Creating response");
         LocalizationResponse lr = new LocalizationResponse();
@@ -67,6 +67,22 @@ public class TestRobot3 {
         DifferentialDriveRequest dr = new DifferentialDriveRequest();
 
 
+        /*
+        System.out.println("Start to move robot");
+        int rc = robot.putRequest(dr);
+        System.out.println("Response code " + rc);
+        */
+        int index = 0;
+        for (Map<String, Object> point : data)
+        {
+            Map<String, Object> pose = (Map<String, Object>)point.get("Pose");
+            Map<String, Object> aPosition = (Map<String, Object>)pose.get("Position");
+            double x = (Double)aPosition.get("X");
+            double y = (Double)aPosition.get("Y");
+            path[index] = new Position(x, y);
+            index++;
+        }
+
         dr.setAngularSpeed(0);
         dr.setLinearSpeed(0);
 
@@ -74,47 +90,66 @@ public class TestRobot3 {
         int rc = robot.putRequest(dr);
         System.out.println("Response code " + rc);
 
-        robot.getResponse(lr);
-        angle = robot.getHeadingAngle(lr);
-        System.out.println("heading = " + angle);
-
-        position = robot.getPosition(lr);
-        System.out.println("position = " + position[0] + ", " + position[1]);
-
-        /*
-        System.out.println("Start to move robot");
-        int rc = robot.putRequest(dr);
-        System.out.println("Response code " + rc);
-        */
-
-        for(JsonElement element : jsonArray){
+        for(Position pos : path){
 
             try
             {
-                Thread.sleep(1000);
+                Thread.sleep(200);
             }
             catch (InterruptedException ex) {}
 
-            JsonObject jsonObject = element.getAsJsonObject();
+            robot.getResponse(lr);
+            angle = robot.getHeadingAngle(lr);
+            position = robot.getPosition(lr);
+            System.out.println("heading = " + angle);
+            System.out.println("position = " + position[0] + ", " + position[1]);
+            roboPos = new Position(position);
 
-            JsonObject pose = jsonObject.get("Pose").getAsJsonObject();
-            JsonObject position1 = pose.get("Position").getAsJsonObject();
-
-            double x = position1.get("X").getAsDouble();
-            double y = position1.get("Y").getAsDouble();
-            //double z = position1.get("Z").getAsDouble();
-
-            while( getDistance(position[0],position[1], x, y) > 0.25)
+            while(roboPos.getDistanceTo(pos) > 0.15)
             {
-                while(getBearing(position[0],position[1], x, y) != angle)
+                while((roboPos.getBearingTo(pos) - angle) > 0.05 && (roboPos.getBearingTo(pos) - angle) < -0.05)
                 {
+
                     dr.setAngularSpeed(Math.PI * 0.05);
+                    dr.setLinearSpeed(0);
                     rc = robot.putRequest(dr);
+
+                    robot.getResponse(lr);
+                    angle = robot.getHeadingAngle(lr);
+                    position = robot.getPosition(lr);
+                    System.out.println("heading = " + angle);
+                    System.out.println("aim = " + roboPos.getBearingTo(pos));
+                    System.out.println("position = " + position[0] + ", " + position[1]);
+                    roboPos = new Position(position);
+
+                    if(roboPos.getBearingTo(pos) == angle){
+                        dr.setAngularSpeed(0);
+                        rc = robot.putRequest(dr);
+                    }
                 }
                 dr.setAngularSpeed(0);
-                dr.setLinearSpeed(0.1);
+                dr.setLinearSpeed(0.25);
                 rc = robot.putRequest(dr);
+
+                robot.getResponse(lr);
+                angle = robot.getHeadingAngle(lr);
+                position = robot.getPosition(lr);
+                System.out.println("heading = " + angle);
+                System.out.println("aim = " + roboPos.getBearingTo(pos));
+                System.out.println("position = " + position[0] + ", " + position[1]);
+                roboPos = new Position(position);
+
             }
+            dr.setAngularSpeed(0);
+            dr.setLinearSpeed(0);
+            rc = robot.putRequest(dr);
+            robot.getResponse(lr);
+            angle = robot.getHeadingAngle(lr);
+            position = robot.getPosition(lr);
+            System.out.println("heading = " + angle);
+            System.out.println("aim = " + roboPos.getBearingTo(pos));
+            System.out.println("position = " + position[0] + ", " + position[1]);
+            roboPos = new Position(position);
         }
 
         // set up request to stop the robot
@@ -126,6 +161,7 @@ public class TestRobot3 {
         System.out.println("Response code " + rc);
 
     }
+
 
     /**
      * Extract the robot heading from the response
