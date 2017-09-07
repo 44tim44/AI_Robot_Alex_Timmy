@@ -47,7 +47,7 @@ public class TestRobot
    public static void main(String[] args) throws Exception
    {     
       System.out.println("Creating Robot");
-      TestRobot robot = new TestRobot("http://127.0.0.1", 50000);
+      TestRobot robot = new TestRobot("http://130.239.42.48", 50000);
 
       System.out.println("Creating response");
       LocalizationResponse lr = new LocalizationResponse();
@@ -56,14 +56,14 @@ public class TestRobot
       DifferentialDriveRequest dr = new DifferentialDriveRequest();
 
       // set up the request to move in a circle
-      dr.setAngularSpeed(Math.PI * 0.25);
-      dr.setLinearSpeed(1.0);
+      dr.setAngularSpeed(Math.PI * 0.05);
+      dr.setLinearSpeed(0.0);
 
       System.out.println("Start to move robot");
       int rc = robot.putRequest(dr);
       System.out.println("Response code " + rc);
 
-      for (int i = 0; i < 16; i++)
+      for (int i = 0; i < 100; i++)
       {
          try
          {

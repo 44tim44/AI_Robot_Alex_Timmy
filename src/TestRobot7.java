@@ -4,12 +4,9 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
-import static java.lang.Math.atan2;
-import static java.lang.Math.sin;
-import static java.lang.Math.sqrt;
+import static java.lang.Math.*;
 
 /**
  * Created by Timeout on 2017-09-04.
@@ -20,7 +17,7 @@ public class TestRobot7 {
     private int port;
     private ObjectMapper mapper;        // maps between JSON and Java structures
     private TestRobot7 robot;
-    private static final double LOOKAHEAD = 0.15;
+    private static final double LOOKAHEAD = 0.25;
 
     /**
      * Create a robot connected to host "host" at port "port"
@@ -44,11 +41,12 @@ public class TestRobot7 {
      */
     public static void main(String[] args) throws Exception
     {
-        double angle;
+        double roboAngle;
         double [] position;
         Position roboPos;
 
-        File pathFile = new File("D:/MRDS4/Java_project/out/production/Java_project/Path-around-bench-and-sofa.json");
+
+        File pathFile = new File("/Users/timmy/IdeaProjects/AI_Robot_Alex_Timmy/out/production/Java_project/Path-around-bench-and-sofa.json");
         BufferedReader in = new BufferedReader(new InputStreamReader(
                 new FileInputStream(pathFile)));
         ObjectMapper mapper2 = new ObjectMapper();
@@ -59,7 +57,7 @@ public class TestRobot7 {
         Position [] path = new Position[nPoints];
 
         System.out.println("Creating Robot");
-        TestRobot7 robot = new TestRobot7("http://127.0.0.1", 50000);
+        TestRobot7 robot = new TestRobot7("http://130.239.42.48", 50000);
 
         System.out.println("Creating response");
         LocalizationResponse lr = new LocalizationResponse();
@@ -68,11 +66,7 @@ public class TestRobot7 {
         DifferentialDriveRequest dr = new DifferentialDriveRequest();
 
 
-        /*
-        System.out.println("Start to move robot");
-        int rc = robot.putRequest(dr);
-        System.out.println("Response code " + rc);
-        */
+        // Read Path-file
         int index = 0;
         for (Map<String, Object> point : data)
         {
@@ -84,64 +78,82 @@ public class TestRobot7 {
             index++;
         }
 
+        // Convert path[] to Deque-Stack
+        List<Position> list = Arrays.asList(path); //1 Convert to a List
+        Deque<Position> pathStack = new ArrayDeque<>(); //2 Create new stack
+        for(int i = list.size() - 1; i >= 0; i--) {
+            pathStack.add(list.get(i));
+        }
+        for(int i = path.length - 1; i >= 0; i--) {
+            pathStack.add(path[i]);
+        }
+
+        // Start robot with 0 speed
         dr.setAngularSpeed(0);
         dr.setLinearSpeed(0);
-
         System.out.println("Start to move robot");
         int rc = robot.putRequest(dr);
         System.out.println("Response code " + rc);
 
+        // Get Robots current Position
         robot.getResponse(lr);
-        angle = robot.getHeadingAngle(lr);
         position = robot.getPosition(lr);
-        System.out.println("heading = " + angle);
-        System.out.println("position = " + position[0] + ", " + position[1]);
         roboPos = new Position(position);
 
-        for(Position pos : path) {
-
-            robot.getResponse(lr);
-            angle = robot.getHeadingAngle(lr);
-            position = robot.getPosition(lr);
-            System.out.println("heading = " + angle);
-            System.out.println("position = " + position[0] + ", " + position[1]);
-            roboPos = new Position(position);
-
+        while(pathStack!=null ) {
 
             try
             {
-                Thread.sleep(100);
+                Thread.sleep(10);
             }
             catch (InterruptedException ex) {}
 
-            if (roboPos.getDistanceTo(pos) >= LOOKAHEAD) {
+            // Update robots current Position and Heading
+            Position goalPos = getGoalPosition(pathStack,roboPos);
+            robot.getResponse(lr);
+            roboAngle = robot.getHeadingAngle(lr);
+            position = robot.getPosition(lr);
+            roboPos = new Position(position);
 
-                double dx = pos.getX() - roboPos.getX();
-                double dy = pos.getY() - roboPos.getY();
-                double len = sqrt(dx*dx + dy*dy);
 
+            // Calculate Curve
+            double len = getDistance(roboPos.getX(), roboPos.getY(), goalPos.getX(), goalPos.getY());
+            double pointAngle = getBearing(roboPos.getX(), roboPos.getY(), goalPos.getX(), goalPos.getY());
 
-                double pointAngle = (2 * atan2(pos.getY()-roboPos.getY(), pos.getX()-roboPos.getX()))* 180 / Math.PI;
-                double diffAngle = pointAngle - angle;
+            if(pointAngle < -180){pointAngle = pointAngle + 360;}
+            if(roboAngle < -180){roboAngle = roboAngle + 360;}
+            if(pointAngle > 180){pointAngle = pointAngle - 360;}
+            if(roboAngle > 180){roboAngle = roboAngle - 360;}
 
-                double yP = sin(diffAngle) / len;
+            double diffAngle = pointAngle - roboAngle;
+            if(diffAngle < -180){diffAngle = diffAngle + 360;}
+            if(diffAngle > 180){diffAngle = diffAngle - 360;}
+            double relativeX = cos(diffAngle) * len;
+            double gamma = (2 * relativeX) / (len * len);
 
-                double gamma = (2 * yP) / (len * len);
+            System.out.println("heading = " + roboAngle);
+            System.out.println("position = " + position[0] + ", " + position[1]);
+            System.out.println("goalposition = " + goalPos.getX() + ", " + goalPos.getY());
+            System.out.println("point angle = " + pointAngle);
+            System.out.println("diff angle = " + diffAngle);
+            System.out.println("dist to gp = " + len);
 
-                dr.setAngularSpeed(gamma);
-                dr.setLinearSpeed(1.0);
-                rc = robot.putRequest(dr);
-            }
+            // Set Speed
+            dr.setAngularSpeed(0.5*(-gamma));
+            dr.setLinearSpeed(0.5);
+            rc = robot.putRequest(dr);
 
         }
+        // Stop robot
         dr.setAngularSpeed(0);
         dr.setLinearSpeed(0);
         rc = robot.putRequest(dr);
 
+        // Update robots current Position and Heading
         robot.getResponse(lr);
-        angle = robot.getHeadingAngle(lr);
+        roboAngle = robot.getHeadingAngle(lr);
         position = robot.getPosition(lr);
-        System.out.println("heading = " + angle);
+        System.out.println("heading = " + roboAngle);
         System.out.println("position = " + position[0] + ", " + position[1]);
         roboPos = new Position(position);
 
@@ -157,7 +169,7 @@ public class TestRobot7 {
     {
         double e[] = lr.getOrientation();
 
-        double angle = 2 * atan2(e[3], e[0]);
+        double angle = 2 * Math.atan2(e[3], e[0]);
         return angle * 180 / Math.PI;
     }
 
@@ -206,6 +218,28 @@ public class TestRobot7 {
         return rc;
     }
 
+    public static Position getGoalPosition(Deque<Position> path, Position roboPos)
+    {
+        for(Position pos : path)
+        {
+            double dx = pos.getX() - roboPos.getX();
+            double dy = pos.getY() - roboPos.getY();
+            double len = sqrt(dx*dx + dy*dy);
+
+            if(len >= LOOKAHEAD)
+            {
+                return pos;
+            }
+            else
+            {
+                //path.pop();
+                path.removeFirst();
+            }
+
+        }
+        return null;
+    }
+
     /**
      * Get a response from the robot
      * @param r response to fill in
@@ -238,6 +272,6 @@ public class TestRobot7 {
 
     public static double getBearing(double x,double y,double newX,double newY)
     {
-        return atan2(newY - y, newX - x);
+        return (2*atan2(newY - y, newX - x))* 180 / Math.PI;
     }
 }
