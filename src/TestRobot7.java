@@ -120,14 +120,8 @@ public class TestRobot7 {
                 double dy = pos.getY() - roboPos.getY();
                 double len = sqrt(dx*dx + dy*dy);
 
-                /*
-                double hx = robotHeading['X']
-                double hy = robotHeading['Y']
-                robotAngle = atan2(hy, hx);
-                */
 
-                double pointAngle = atan2(pos.getY()-roboPos.getY(), pos.getX()-roboPos.getX());
-
+                double pointAngle = (2 * atan2(pos.getY()-roboPos.getY(), pos.getX()-roboPos.getX()))* 180 / Math.PI;
                 double diffAngle = pointAngle - angle;
 
                 double yP = sin(diffAngle) / len;
