@@ -46,7 +46,7 @@ public class TestRobot7 {
         Position roboPos;
 
 
-        File pathFile = new File("/Users/timmy/IdeaProjects/AI_Robot_Alex_Timmy/out/production/Java_project/Path-around-bench-and-sofa.json");
+        File pathFile = new File("D:/MRDS4/Robot_Java/AI_Robot_Alex_Timmy/out/production/Java_project/Path-around-bench-and-sofa.json");
         BufferedReader in = new BufferedReader(new InputStreamReader(
                 new FileInputStream(pathFile)));
         ObjectMapper mapper2 = new ObjectMapper();
@@ -57,7 +57,7 @@ public class TestRobot7 {
         Position [] path = new Position[nPoints];
 
         System.out.println("Creating Robot");
-        TestRobot7 robot = new TestRobot7("http://130.239.42.48", 50000);
+        TestRobot7 robot = new TestRobot7("http://127.0.0.1", 50000);
 
         System.out.println("Creating response");
         LocalizationResponse lr = new LocalizationResponse();
@@ -167,10 +167,15 @@ public class TestRobot7 {
      */
     double getHeadingAngle(LocalizationResponse lr)
     {
+        double angle = lr.getHeadingAngle();
+        return angle * 180 / Math.PI;
+
+        /*
         double e[] = lr.getOrientation();
 
         double angle = 2 * Math.atan2(e[3], e[0]);
         return angle * 180 / Math.PI;
+        */
     }
 
     /**
@@ -232,8 +237,7 @@ public class TestRobot7 {
             }
             else
             {
-                //path.pop();
-                path.removeFirst();
+                path.pop();
             }
 
         }
@@ -270,8 +274,8 @@ public class TestRobot7 {
         return sqrt((x - newX) * (x - newX) + (y - newY) * (y - newY));
     }
 
-    public static double getBearing(double x,double y,double newX,double newY)
+    public static double getBearing(double x0,double y0,double xp,double yp)
     {
-        return (2*atan2(newY - y, newX - x))* 180 / Math.PI;
+        return (2*atan2(yp - y0, xp - x0))* 180 / Math.PI;
     }
 }
