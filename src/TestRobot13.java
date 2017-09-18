@@ -9,10 +9,10 @@ import java.util.*;
 import static java.lang.Math.*;
 
 
-public class TestRobot11
+public class TestRobot13
 {
     private RobotCommunication robotcomm;  // communication drivers
-    private static final double LOOKAHEAD = 0.5;
+    private static final double LOOKAHEAD = 0.75;
     private Deque<Position> pathStack;
     private double gamma = 0;
 
@@ -22,7 +22,7 @@ public class TestRobot11
      * @param host normally http://127.0.0.1
      * @param port normally 50000
      */
-    public TestRobot11(String host, int port)
+    public TestRobot13(String host, int port)
     {
         robotcomm = new RobotCommunication(host, port);
     }
@@ -36,7 +36,7 @@ public class TestRobot11
     public static void main(String[] args) throws Exception
     {
         System.out.println("Creating Robot");
-        TestRobot11 robot = new TestRobot11("http://130.239.42.75", 50000);
+        TestRobot13 robot = new TestRobot13("http://130.239.42.75", 50000);
         robot.readFile();
 
         robot.run();
@@ -70,15 +70,29 @@ public class TestRobot11
             Position goalPos = getGoalPosition(robotPos);
 
             if(goalPos != null){
-                double [] goalPosRCS = toRCS(robotPos,goalPos,heading);
-                double yP = goalPosRCS[0];
-                double length = goalPosRCS[1];
+                //Calculate distance to the goal point from the robot
+                double dx = goalPos.getX() - robotPos.getX();
+                double dy = goalPos.getY() - robotPos.getY();
+                double length = pythHyp(dx, dy);
+
+                //Calculate the angle between the goal point and the world coordinate system
+                double bearing = getBearing(robotPos.getX(),robotPos.getY(),goalPos.getX(),goalPos.getY());
+
+                //Calculate the angle between the goal point and the robot coordinate system
+                double diffAngle = bearing - heading;
+
+                //Calculate the goal point 's y-coordinate relative to the robot' s coordinate system
+                double yP = sin(diffAngle) / length;
 
                 gamma = (2*yP)/(Math.pow(length,2));
+
                 System.out.println("heading = " + heading);
                 System.out.println("position = " + robotPos.getX() + ", " + robotPos.getY());
                 System.out.println("goalposition = " + goalPos.getX() + ", " + goalPos.getY());
+                System.out.println("bearing = " + bearing);
+                System.out.println("DiffAngle = " + diffAngle);
                 System.out.println("dist to gp = " + length);
+                System.out.println("Gamma = " + gamma);
 
                 try
                 {
@@ -112,7 +126,7 @@ public class TestRobot11
     double getHeadingAngle(LocalizationResponse lr)
     {
         double angle = lr.getHeadingAngle();
-        return angle * 180 / Math.PI;
+        return angle;
     }
 
     public Position getGoalPosition(Position roboPos)
@@ -163,7 +177,7 @@ public class TestRobot11
 
     public static double getBearing(double x0,double y0,double xp,double yp)
     {
-        return (atan2(yp - y0, xp - x0))* 180 / Math.PI;
+        return (atan2(yp - y0, xp - x0));
     }
 
     public void readFile() throws Exception{

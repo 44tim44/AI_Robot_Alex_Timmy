@@ -159,7 +159,7 @@ public class TestRobot10
     }
 
     public void readFile() throws Exception{
-        File pathFile = new File("D:/MRDS4/Robot_Java/AI_Robot_Alex_Timmy/out/production/Java_project/Path-around-bench-and-sofa.json");
+        File pathFile = new File("/Users/timmy/IdeaProjects/AI_Robot_Alex_Timmy/out/production/Java_project");
         BufferedReader in = new BufferedReader(new InputStreamReader(
                 new FileInputStream(pathFile)));
         ObjectMapper mapper2 = new ObjectMapper();

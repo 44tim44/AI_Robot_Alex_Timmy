@@ -9,10 +9,10 @@ import java.util.*;
 import static java.lang.Math.*;
 
 
-public class TestRobot11
+public class TestRobot_Carrot1
 {
     private RobotCommunication robotcomm;  // communication drivers
-    private static final double LOOKAHEAD = 0.5;
+    private static final double LOOKAHEAD = 0.8;
     private Deque<Position> pathStack;
     private double gamma = 0;
 
@@ -22,7 +22,7 @@ public class TestRobot11
      * @param host normally http://127.0.0.1
      * @param port normally 50000
      */
-    public TestRobot11(String host, int port)
+    public TestRobot_Carrot1(String host, int port)
     {
         robotcomm = new RobotCommunication(host, port);
     }
@@ -36,7 +36,7 @@ public class TestRobot11
     public static void main(String[] args) throws Exception
     {
         System.out.println("Creating Robot");
-        TestRobot11 robot = new TestRobot11("http://130.239.42.75", 50000);
+        TestRobot_Carrot1 robot = new TestRobot_Carrot1("http://127.0.0.1", 50000);
         robot.readFile();
 
         robot.run();
@@ -68,28 +68,29 @@ public class TestRobot11
             heading = getHeadingAngle(lr);
             robotPos = new Position(lr.getPosition());
             Position goalPos = getGoalPosition(robotPos);
+            double bearing = getBearing(robotPos.getX(),robotPos.getY(),goalPos.getX(),goalPos.getY());
 
             if(goalPos != null){
-                double [] goalPosRCS = toRCS(robotPos,goalPos,heading);
-                double yP = goalPosRCS[0];
-                double length = goalPosRCS[1];
-
-                gamma = (2*yP)/(Math.pow(length,2));
-                System.out.println("heading = " + heading);
-                System.out.println("position = " + robotPos.getX() + ", " + robotPos.getY());
-                System.out.println("goalposition = " + goalPos.getX() + ", " + goalPos.getY());
-                System.out.println("dist to gp = " + length);
-
+                if( (heading - bearing) < 1.0 )
+                {
+                    dr.setAngularSpeed(0);
+                    dr.setLinearSpeed(1.0);
+                }
+                else
+                {
+                    double diffAngle = bearing - heading;
+                    if(diffAngle < -180){diffAngle = diffAngle + 360;}
+                    if(diffAngle > 180){diffAngle = diffAngle - 360;}
+                    double diffRadian = diffAngle * PI / 180;
+                    dr.setAngularSpeed(diffRadian*10);
+                    dr.setLinearSpeed(0);
+                }
                 try
                 {
                     Thread.sleep(100);
                 }
                 catch (InterruptedException ex) {}
             }
-
-            // Set Speed
-            dr.setAngularSpeed(0.5*(gamma));
-            dr.setLinearSpeed(0.5);
             rc = robotcomm.putRequest(dr);
 
         }
@@ -112,6 +113,8 @@ public class TestRobot11
     double getHeadingAngle(LocalizationResponse lr)
     {
         double angle = lr.getHeadingAngle();
+        //if(angle < -180){angle = angle + 360;}
+        //if(angle > 180){angle = angle - 360;}
         return angle * 180 / Math.PI;
     }
 
@@ -133,29 +136,6 @@ public class TestRobot11
         return null;
     }
 
-    public double[] toRCS(Position pos, Position goalPos, double robotAngle) {
-        double [] data = new double[2];
-
-    //Calculate distance to the goal point from the robot
-        double dx = goalPos.getX() - pos.getX();
-        double dy = goalPos.getY() - pos.getY();
-        double length = pythHyp(dx, dy);
-
-    //Calculate the angle between the goal point and the world coordinate system
-        double pointAngle = atan2(goalPos.getY() - pos.getY(), goalPos.getX() - pos.getX());
-
-    //Calculate the angle between the goal point and the robot coordinate system
-        double diffAngle = pointAngle - robotAngle;
-
-    //Calculate the goal point 's y-coordinate relative to the robot' s coordinate system
-        double yP = sin(diffAngle) / length;
-
-        data[0] = yP;
-        data[1] = length;
-
-        return data;
-    }
-
     public static double getDistance(double x0,double y0,double xp,double yp)
     {
         return sqrt((xp - x0)*(xp - x0) + (yp - y0)*(yp - y0));
@@ -167,7 +147,7 @@ public class TestRobot11
     }
 
     public void readFile() throws Exception{
-        File pathFile = new File("/Users/timmy/IdeaProjects/AI_Robot_Alex_Timmy/out/production/Java_project/Path-around-bench-and-sofa.json");
+        File pathFile = new File("D:/MRDS4/Robot_Java/AI_Robot_Alex_Timmy/out/production/Java_project/Path-around-bench-and-sofa.json");
         BufferedReader in = new BufferedReader(new InputStreamReader(
                 new FileInputStream(pathFile)));
         ObjectMapper mapper2 = new ObjectMapper();
