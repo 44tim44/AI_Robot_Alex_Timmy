@@ -9,10 +9,10 @@ import java.util.*;
 import static java.lang.Math.*;
 
 
-public class TestRobot13
+public class TestRobot13_v2
 {
     private RobotCommunication robotcomm;  // communication drivers
-    private static final double LOOKAHEAD = 0.7;
+    private static final double LOOKAHEAD = 0.75;
     private Deque<Position> pathStack;
     private double gamma = 0;
 
@@ -22,7 +22,7 @@ public class TestRobot13
      * @param host normally http://127.0.0.1
      * @param port normally 50000
      */
-    public TestRobot13(String host, int port)
+    public TestRobot13_v2(String host, int port)
     {
         robotcomm = new RobotCommunication(host, port);
     }
@@ -36,7 +36,7 @@ public class TestRobot13
     public static void main(String[] args) throws Exception
     {
         System.out.println("Creating Robot");
-        TestRobot13 robot = new TestRobot13("http://130.239.42.75", 50000);
+        TestRobot13_v2 robot = new TestRobot13_v2("http://130.239.42.75", 50000);
         robot.readFile();
 
         robot.run();
@@ -96,14 +96,14 @@ public class TestRobot13
 
                 try
                 {
-                    Thread.sleep(100);
+                    Thread.sleep(10);
                 }
                 catch (InterruptedException ex) {}
             }
 
             // Set Speed
-            dr.setAngularSpeed(0.5*(gamma));
-            dr.setLinearSpeed(0.5);
+            dr.setAngularSpeed(1.0*(gamma));
+            dr.setLinearSpeed(1.0);
             rc = robotcomm.putRequest(dr);
 
         }
