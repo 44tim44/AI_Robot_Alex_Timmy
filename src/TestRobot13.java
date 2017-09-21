@@ -219,37 +219,12 @@ public class TestRobot13
         }
 
         // Convert path[] to Deque-Stack
-        /*
-        System.out.println("path[] size: " + path.length);
-        System.out.println("pos 1 x: " + path[0].getX() + " y: " + path[0].getY());
-        System.out.println("pos 2 x: " + path[1].getX() + " y: " + path[1].getY());
-        System.out.println("pos 3 x: " + path[2].getX() + " y: " + path[2].getY());
-        */
         List<Position> list = Arrays.asList(path); //1 Convert to a List
         pathStack = new ArrayDeque<>(); //2 Create new stack
-
-
-
         for(int i = 0; i < list.size() - 1; i++)
         {
             pathStack.add(list.get(i));
         }
-
-        /*
-        for(int i = list.size() - 1; i >= 0; i--)
-        {
-            pathStack.add(list.get(i));
-        }
-        for(int i = path.length - 1; i >= 0; i--)
-        {
-            pathStack.add(path[i]);
-        }
-
-        System.out.println("pathStack size: " + pathStack.size());
-        System.out.println("pos 1 x: " + pathStack.peek().getX() + " y: " + pathStack.pop().getY());
-        System.out.println("pos 2 x: " + pathStack.peek().getX() + " y: " + pathStack.pop().getY());
-        System.out.println("pos 3 x: " + pathStack.peek().getX() + " y: " + pathStack.pop().getY());
-        */
     }
 
     /**
