@@ -18,6 +18,11 @@ public class TestRobot13
     private Deque<Position> pathStack;              // Stack containing path to follow.
     private double gamma = 0;                       // Current angular speed
 
+    //private String robotHost = "http://130.239.42.75";
+    //private String filePath = "/Users/timmy/IdeaProjects/AI_Robot_Alex_Timmy/out/production/Java_project/Path-around-bench-and-sofa.json";
+    private static final String robotHost = "http://127.0.0.1";
+    private static final String filePath = "D:/MRDS4/Java_project/out/production/Java_project/Path-around-bench-and-sofa.json";
+
 
     /**
      * Create a robot connected to host "host" at port "port"
@@ -38,7 +43,7 @@ public class TestRobot13
     public static void main(String[] args) throws Exception
     {
         System.out.println("Creating Robot");
-        TestRobot13 robot = new TestRobot13("http://130.239.42.75", 50000);
+        TestRobot13 robot = new TestRobot13(robotHost, 50000);
         robot.readFile();
         robot.run();
     }
@@ -66,7 +71,7 @@ public class TestRobot13
         int rc = robotcomm.putRequest(dr);
         System.out.println("Response code " + rc);
 
-        while(pathStack!=null ) {
+        while(!pathStack.isEmpty() ) {
 
             // Update current position information
             robotcomm.getResponse(lr);
@@ -102,12 +107,12 @@ public class TestRobot13
                 System.out.println("Gamma = " + gamma);
 
                 // Wait 100 milliseconds
-                Thread.sleep(100);
+                Thread.sleep(10);
             }
 
             // Set Speed
-            dr.setAngularSpeed(0.5*(gamma));
-            dr.setLinearSpeed(0.5);
+            dr.setAngularSpeed(1.0*(gamma));
+            dr.setLinearSpeed(1.0);
             robotcomm.putRequest(dr);
 
         }
@@ -190,7 +195,7 @@ public class TestRobot13
     public void readFile() throws Exception
     {
         // Read the path from JSON-file
-        File pathFile = new File("/Users/timmy/IdeaProjects/AI_Robot_Alex_Timmy/out/production/Java_project/Path-around-bench-and-sofa.json");
+        File pathFile = new File(filePath);
         BufferedReader in = new BufferedReader(new InputStreamReader(
                 new FileInputStream(pathFile)));
         ObjectMapper mapper2 = new ObjectMapper();
@@ -214,14 +219,37 @@ public class TestRobot13
         }
 
         // Convert path[] to Deque-Stack
+        /*
+        System.out.println("path[] size: " + path.length);
+        System.out.println("pos 1 x: " + path[0].getX() + " y: " + path[0].getY());
+        System.out.println("pos 2 x: " + path[1].getX() + " y: " + path[1].getY());
+        System.out.println("pos 3 x: " + path[2].getX() + " y: " + path[2].getY());
+        */
         List<Position> list = Arrays.asList(path); //1 Convert to a List
         pathStack = new ArrayDeque<>(); //2 Create new stack
-        for(int i = list.size() - 1; i >= 0; i--) {
+
+
+
+        for(int i = 0; i < list.size() - 1; i++)
+        {
             pathStack.add(list.get(i));
         }
-        for(int i = path.length - 1; i >= 0; i--) {
+
+        /*
+        for(int i = list.size() - 1; i >= 0; i--)
+        {
+            pathStack.add(list.get(i));
+        }
+        for(int i = path.length - 1; i >= 0; i--)
+        {
             pathStack.add(path[i]);
         }
+
+        System.out.println("pathStack size: " + pathStack.size());
+        System.out.println("pos 1 x: " + pathStack.peek().getX() + " y: " + pathStack.pop().getY());
+        System.out.println("pos 2 x: " + pathStack.peek().getX() + " y: " + pathStack.pop().getY());
+        System.out.println("pos 3 x: " + pathStack.peek().getX() + " y: " + pathStack.pop().getY());
+        */
     }
 
     /**
