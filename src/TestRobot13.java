@@ -110,7 +110,7 @@ public class TestRobot13
                 System.out.println("dist to gp = " + length);
                 System.out.println("Gamma = " + gamma);
 
-                // Wait 100 milliseconds
+                // Wait 10 milliseconds
                 Thread.sleep(10);
             }
 
