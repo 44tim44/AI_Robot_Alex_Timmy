@@ -22,7 +22,7 @@ public class TestRobot13
     //private String filePath = "/Users/timmy/IdeaProjects/AI_Robot_Alex_Timmy/out/production/Java_project/Path-around-bench-and-sofa.json";
     private static final String robotHost = "http://127.0.0.1";
     //private static final String filePath = "D:/MRDS4/Java_project/out/production/Java_project/Path-around-bench-and-sofa.json";
-    private static final String filePath = "C:/Users/alexn/Documents/GitHub/AI_Robot_Alex_Timmy/src/Path-from-bed.json";
+    private static final String filePath = "C:/Users/alexn/Documents/GitHub/AI_Robot_Alex_Timmy/src/Path-around-bench-and-sofa.json";
 
     /**
      * Create a robot connected to host "host" at port "port"
