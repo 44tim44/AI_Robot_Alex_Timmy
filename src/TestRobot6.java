@@ -127,6 +127,7 @@ public class TestRobot6
             bearingAngle = roboPos.getBearingTo(carrotPos);//Math.atan2(dy, dx);
             newAngle = bearingAngle - headingAngle;
             System.out.println(newAngle);
+            /*
             if (Math.abs(newAngle) > Math.PI) {
                 newAngle = newAngle - (2*Math.PI);
                 newAngle = Math.abs(newAngle);
@@ -140,6 +141,16 @@ public class TestRobot6
             else {
                 dr.setAngularSpeed(1.5 * newAngle / Math.PI);
             }
+            */
+
+            if(newAngle > Math.PI){
+                newAngle = newAngle - 2*Math.PI;
+            }
+            if(newAngle < (-Math.PI)){
+                newAngle = newAngle + 2*Math.PI;
+            }
+            dr.setAngularSpeed(newAngle);
+
             System.out.println(newAngle);
             /*if(Math.abs(newAngle) == 0) {
                 newAngle = newAngle;
@@ -197,8 +208,7 @@ public class TestRobot6
     {
         double e[] = lr.getOrientation();
 
-        double angle = 2 * Math.atan2(e[3], e[0]);
-        return angle * 180 / Math.PI;
+        return Math.atan2(e[3], e[0]);
     }
 
     /**
