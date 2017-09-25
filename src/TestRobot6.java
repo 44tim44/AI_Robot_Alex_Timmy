@@ -105,7 +105,7 @@ public class TestRobot6
         //roboPos = new Position(robot.getPosition(lr));
         carrotPos = pathQueue.peek();
 
-        while (pathQueue.size() > 1){
+        while (!pathQueue.isEmpty()){
             try
             {
                 Thread.sleep(100);
