@@ -45,7 +45,11 @@ public class TestRobot13
         System.out.println("Creating Robot");
         TestRobot13 robot = new TestRobot13(robotHost, 50000);
         robot.readFile();
+        long start = System.nanoTime();
         robot.run();
+        long elapsedTime = System.nanoTime() - start;
+        long timeMs = elapsedTime / 1000000;
+        System.out.println("Total execution time : " + timeMs + " ms");
     }
 
     /**
