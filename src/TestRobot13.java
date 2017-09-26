@@ -89,6 +89,7 @@ public class TestRobot13
                 double dy = goalPos.getY() - robotPos.getY();
                 double length = pythHyp(dx, dy);
 
+                Math.hypot(goalPos.getX() - robotPos.getX(),goalPos.getY() - robotPos.getY());
                 //Calculate the angle between the goal point and the world coordinate system
                 double bearing = getBearing(robotPos.getX(),robotPos.getY(),goalPos.getX(),goalPos.getY());
 
@@ -109,9 +110,6 @@ public class TestRobot13
                 System.out.println("DiffAngle = " + diffAngle);
                 System.out.println("dist to gp = " + length);
                 System.out.println("Gamma = " + gamma);
-
-                // Wait 10 milliseconds
-                Thread.sleep(10);
             }
 
             // Set Speed
@@ -119,6 +117,8 @@ public class TestRobot13
             dr.setLinearSpeed(1.0);
             robotcomm.putRequest(dr);
 
+            // Wait 10 milliseconds
+            Thread.sleep(10);
         }
 
         // Set up request to stop the robot
